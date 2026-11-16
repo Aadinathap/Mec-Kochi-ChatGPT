@@ -1,0 +1,370 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Shared Primitive Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidDepartment(dept) {
+      return dept is string && dept in ['CSE', 'ECE', 'EEE', 'BME', 'ME'];
+    }
+
+    function isValidDepartmentOrAll(dept) {
+      return dept is string && dept in ['ALL', 'CSE', 'ECE', 'EEE', 'BME', 'ME'];
+    }
+
+    function isValidSemester(sem) {
+      return sem is string && sem in ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+    }
+
+    // --- Validation Helpers ---
+    function isValidStudentProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 60 &&
+             isValidDepartment(data.department) &&
+             isValidSemester(data.semester) &&
+             data.notificationsEnabled is bool &&
+             (!('darkThemeEnabled' in data) || data.darkThemeEnabled is bool) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidScheduleSlot(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.courseCode is string && data.courseCode.size() >= 1 && data.courseCode.size() <= 20 &&
+             data.courseTitle is string && data.courseTitle.size() >= 2 && data.courseTitle.size() <= 100 &&
+             data.facultyName is string && data.facultyName.size() <= 80 &&
+             data.room is string && data.room.size() <= 40 &&
+             data.dayOfWeek is string && data.dayOfWeek in ['MON', 'TUE', 'WED', 'THU', 'FRI', 'EXAM'] &&
+             data.startTime is string && data.startTime.size() >= 1 && data.startTime.size() <= 20 &&
+             data.endTime is string && data.endTime.size() >= 1 && data.endTime.size() <= 20 &&
+             data.slotType is string && data.slotType in ['Lecture', 'Lab', 'Exam', 'Assignment'] &&
+             data.reminderEnabled is bool &&
+             data.isCompleted is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidEventRsvp(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.eventId is string && data.eventId.size() >= 1 && data.eventId.size() <= 128 &&
+             data.eventTitle is string && data.eventTitle.size() >= 1 && data.eventTitle.size() <= 120 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidChatMessage(data) {
+      return data.campusId == 'mec_kochi' &&
+             data.channelId is string && data.channelId in ['general', 'cse', 'ece', 'eee', 'bme', 'mech', 'placement', 'excel_fest'] &&
+             data.senderId is string && data.senderId.size() >= 1 && data.senderId.size() <= 128 &&
+             data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 60 &&
+             isValidDepartment(data.senderDepartment) &&
+             isValidSemester(data.senderSemester) &&
+             data.content is string && data.content.size() <= 1000 &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() >= 8 && data.imageUrl.size() <= 1200 && data.imageUrl.matches('^https://.*'))) &&
+             (data.content.size() >= 1 || ('imageUrl' in data && data.imageUrl is string && data.imageUrl.size() >= 8)) &&
+             (!('tag' in data) || (data.tag is string && data.tag in ['Discussion', 'Doubt', 'Announcement', 'Note'])) &&
+             (!('readReceipts' in data) || (data.readReceipts is map && data.readReceipts.size() <= 200)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidChatTypingStatus(data) {
+      return data.campusId == 'mec_kochi' &&
+             data.channelId is string && data.channelId in ['general', 'cse', 'ece', 'eee', 'bme', 'mech', 'placement', 'excel_fest'] &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+             isValidDepartment(data.department) &&
+             data.isTyping is bool &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCampusEvent(data) {
+      return data.campusId == 'mec_kochi' &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 120 &&
+             data.organizer is string && data.organizer.size() >= 2 && data.organizer.size() <= 80 &&
+             data.category is string && data.category in ['Tech Fest', 'Workshop', 'Hackathon', 'Placement', 'Cultural', 'Club'] &&
+             data.venue is string && data.venue.size() >= 2 && data.venue.size() <= 100 &&
+             data.dateLabel is string && data.dateLabel.size() >= 2 && data.dateLabel.size() <= 40 &&
+             data.timeLabel is string && data.timeLabel.size() >= 2 && data.timeLabel.size() <= 40 &&
+             data.description is string && data.description.size() >= 5 && data.description.size() <= 1000 &&
+             isValidDepartmentOrAll(data.department) &&
+             data.creatorId is string && data.creatorId.size() >= 1 && data.creatorId.size() <= 128 &&
+             data.rsvpCount is int && data.rsvpCount >= 0 && data.rsvpCount <= 100000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidDepartmentResource(data) {
+      return data.campusId == 'mec_kochi' &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 120 &&
+             isValidDepartmentOrAll(data.department) &&
+             isValidSemester(data.semester) &&
+             data.subjectCode is string && data.subjectCode.size() >= 2 && data.subjectCode.size() <= 20 &&
+             data.resourceType is string && data.resourceType in ['PDF', 'Link', 'Notes', 'PYQ', 'Lab Manual', 'Syllabus', 'Slides'] &&
+             data.description is string && data.description.size() >= 3 && data.description.size() <= 800 &&
+             data.linkOrReference is string && data.linkOrReference.size() >= 3 && data.linkOrReference.size() <= 300 &&
+             data.uploaderId is string && data.uploaderId.size() >= 1 && data.uploaderId.size() <= 128 &&
+             data.uploaderName is string && data.uploaderName.size() >= 1 && data.uploaderName.size() <= 60 &&
+             data.upvotes is int && data.upvotes >= 0 && data.upvotes <= 100000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCampusAlert(data) {
+      return data.campusId == 'mec_kochi' &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 120 &&
+             data.message is string && data.message.size() >= 3 && data.message.size() <= 600 &&
+             data.category is string && data.category in ['Academic', 'Exam', 'Placement', 'Event', 'Urgent'] &&
+             isValidDepartmentOrAll(data.department) &&
+             data.senderId is string && data.senderId.size() >= 1 && data.senderId.size() <= 128 &&
+             data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 60 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidFcmDeviceToken(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.token is string && data.token.size() >= 10 && data.token.size() <= 512 &&
+             isValidDepartment(data.department) &&
+             data.topics is list && data.topics.size() <= 10 &&
+             (data.topics.size() == 0 || (data.topics[0] is string && data.topics[0].size() <= 64)) &&
+             data.enabled is bool &&
+             data.platform is string && data.platform == 'android' &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // --- Collection Rules ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'department', 'semester', 'notificationsEnabled', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'department', 'semester', 'notificationsEnabled', 'darkThemeEnabled', 'createdAt', 'updatedAt']) &&
+                       isValidStudentProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidStudentProfile(incoming()) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'department', 'semester', 'notificationsEnabled', 'darkThemeEnabled', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      match /academic_schedule/{slotId} {
+        allow get: if isSignedIn() && isValidId(slotId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(slotId) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'courseCode', 'courseTitle', 'facultyName', 'room', 'dayOfWeek', 'startTime', 'endTime', 'slotType', 'reminderEnabled', 'isCompleted', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'courseCode', 'courseTitle', 'facultyName', 'room', 'dayOfWeek', 'startTime', 'endTime', 'slotType', 'reminderEnabled', 'isCompleted', 'createdAt', 'updatedAt']) &&
+                         isValidScheduleSlot(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(slotId) &&
+                         isValidScheduleSlot(incoming()) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['courseCode', 'courseTitle', 'facultyName', 'room', 'dayOfWeek', 'startTime', 'endTime', 'slotType', 'reminderEnabled', 'isCompleted', 'updatedAt']);
+
+        allow delete: if isSignedIn() && isValidId(slotId) && request.auth.uid == userId;
+      }
+
+      match /event_rsvps/{eventId} {
+        allow get: if isSignedIn() && isValidId(eventId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(eventId) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().eventId == eventId &&
+                         incoming().keys().hasAll(['userId', 'eventId', 'eventTitle', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'eventId', 'eventTitle', 'createdAt']) &&
+                         isValidEventRsvp(incoming());
+
+        allow update: if false;
+        allow delete: if isSignedIn() && isValidId(eventId) && request.auth.uid == userId;
+      }
+
+      match /fcm_tokens/{tokenId} {
+        allow get: if isSignedIn() && isValidId(tokenId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         isValidId(tokenId) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'token', 'department', 'topics', 'enabled', 'platform', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'token', 'department', 'topics', 'enabled', 'platform', 'createdAt', 'updatedAt']) &&
+                         isValidFcmDeviceToken(incoming());
+
+        allow update: if isSignedIn() &&
+                         isValidId(tokenId) &&
+                         isValidFcmDeviceToken(incoming()) &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['token', 'department', 'topics', 'enabled', 'platform', 'updatedAt']);
+
+        allow delete: if isSignedIn() && isValidId(tokenId) && request.auth.uid == userId;
+      }
+    }
+
+    match /chat_messages/{messageId} {
+      allow get: if isSignedIn() && isValidId(messageId) && existing().campusId == 'mec_kochi';
+      allow list: if isSignedIn() && resource.data.campusId == 'mec_kochi';
+
+      allow create: if isSignedIn() &&
+                       isValidId(messageId) &&
+                       incoming().senderId == request.auth.uid &&
+                       incoming().keys().hasAll(['campusId', 'channelId', 'senderId', 'senderName', 'senderDepartment', 'senderSemester', 'content', 'createdAt']) &&
+                       incoming().keys().hasOnly(['campusId', 'channelId', 'senderId', 'senderName', 'senderDepartment', 'senderSemester', 'content', 'tag', 'imageUrl', 'readReceipts', 'createdAt']) &&
+                       (!('readReceipts' in incoming()) || incoming().readReceipts.size() == 0) &&
+                       isValidChatMessage(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(messageId) &&
+                       isValidChatMessage(incoming()) &&
+                       existing().campusId == 'mec_kochi' &&
+                       incoming().senderId == existing().senderId &&
+                       incoming().campusId == existing().campusId &&
+                       incoming().channelId == existing().channelId &&
+                       incoming().createdAt == existing().createdAt && (
+                         (existing().senderId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['content', 'tag'])) ||
+                         (incoming().diff(existing()).affectedKeys().hasOnly(['readReceipts']) &&
+                          incoming().readReceipts is map &&
+                          incoming().readReceipts.size() <= 200 &&
+                          request.auth.uid in incoming().readReceipts &&
+                          incoming().readReceipts.diff(existing().get('readReceipts', {})).affectedKeys().hasOnly([request.auth.uid]) &&
+                          incoming().readReceipts[request.auth.uid] is string &&
+                          incoming().readReceipts[request.auth.uid].size() >= 1 &&
+                          incoming().readReceipts[request.auth.uid].size() <= 60)
+                       );
+
+      allow delete: if isSignedIn() && isValidId(messageId) && existing().senderId == request.auth.uid;
+    }
+
+    match /chat_typing/{typingDocId} {
+      allow get: if isSignedIn() && isValidId(typingDocId) && existing().campusId == 'mec_kochi';
+      allow list: if isSignedIn() && resource.data.campusId == 'mec_kochi';
+
+      allow create: if isSignedIn() &&
+                       isValidId(typingDocId) &&
+                       incoming().userId == request.auth.uid &&
+                       typingDocId == incoming().channelId + '_' + request.auth.uid &&
+                       incoming().keys().hasAll(['campusId', 'channelId', 'userId', 'displayName', 'department', 'isTyping', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['campusId', 'channelId', 'userId', 'displayName', 'department', 'isTyping', 'updatedAt']) &&
+                       isValidChatTypingStatus(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(typingDocId) &&
+                       isValidChatTypingStatus(incoming()) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().campusId == existing().campusId &&
+                       incoming().channelId == existing().channelId &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'department', 'isTyping', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(typingDocId) && existing().userId == request.auth.uid;
+    }
+
+    match /campus_events/{eventId} {
+      allow get: if isSignedIn() && isValidId(eventId) && existing().campusId == 'mec_kochi';
+      allow list: if isSignedIn() && resource.data.campusId == 'mec_kochi';
+
+      allow create: if isSignedIn() &&
+                       isValidId(eventId) &&
+                       incoming().creatorId == request.auth.uid &&
+                       incoming().rsvpCount >= 0 && incoming().rsvpCount <= 1 &&
+                       incoming().keys().hasAll(['campusId', 'title', 'organizer', 'category', 'venue', 'dateLabel', 'timeLabel', 'description', 'department', 'creatorId', 'rsvpCount', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['campusId', 'title', 'organizer', 'category', 'venue', 'dateLabel', 'timeLabel', 'description', 'department', 'creatorId', 'rsvpCount', 'createdAt', 'updatedAt']) &&
+                       isValidCampusEvent(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(eventId) &&
+                       isValidCampusEvent(incoming()) &&
+                       incoming().creatorId == existing().creatorId &&
+                       incoming().campusId == existing().campusId &&
+                       incoming().createdAt == existing().createdAt && (
+                         (existing().creatorId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'organizer', 'category', 'venue', 'dateLabel', 'timeLabel', 'description', 'department', 'updatedAt'])) ||
+                         ((incoming().rsvpCount == existing().rsvpCount + 1 || incoming().rsvpCount == existing().rsvpCount - 1) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['rsvpCount', 'updatedAt']))
+                       );
+
+      allow delete: if isSignedIn() && isValidId(eventId) && existing().creatorId == request.auth.uid;
+    }
+
+    match /department_resources/{resourceId} {
+      allow get: if isSignedIn() && isValidId(resourceId) && existing().campusId == 'mec_kochi';
+      allow list: if isSignedIn() && resource.data.campusId == 'mec_kochi';
+
+      allow create: if isSignedIn() &&
+                       isValidId(resourceId) &&
+                       incoming().uploaderId == request.auth.uid &&
+                       incoming().upvotes == 0 &&
+                       incoming().keys().hasAll(['campusId', 'title', 'department', 'semester', 'subjectCode', 'resourceType', 'description', 'linkOrReference', 'uploaderId', 'uploaderName', 'upvotes', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['campusId', 'title', 'department', 'semester', 'subjectCode', 'resourceType', 'description', 'linkOrReference', 'uploaderId', 'uploaderName', 'upvotes', 'createdAt', 'updatedAt']) &&
+                       isValidDepartmentResource(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(resourceId) &&
+                       isValidDepartmentResource(incoming()) &&
+                       incoming().uploaderId == existing().uploaderId &&
+                       incoming().campusId == existing().campusId &&
+                       incoming().createdAt == existing().createdAt && (
+                         (existing().uploaderId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'department', 'semester', 'subjectCode', 'resourceType', 'description', 'linkOrReference', 'updatedAt'])) ||
+                         ((incoming().upvotes == existing().upvotes + 1 || incoming().upvotes == existing().upvotes - 1) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'updatedAt']))
+                       );
+
+      allow delete: if isSignedIn() && isValidId(resourceId) && existing().uploaderId == request.auth.uid;
+    }
+
+    match /campus_alerts/{alertId} {
+      allow get: if isSignedIn() && isValidId(alertId) && existing().campusId == 'mec_kochi';
+      allow list: if isSignedIn() && resource.data.campusId == 'mec_kochi';
+
+      allow create: if isSignedIn() &&
+                       isValidId(alertId) &&
+                       incoming().senderId == request.auth.uid &&
+                       incoming().keys().hasAll(['campusId', 'title', 'message', 'category', 'department', 'senderId', 'senderName', 'createdAt']) &&
+                       incoming().keys().hasOnly(['campusId', 'title', 'message', 'category', 'department', 'senderId', 'senderName', 'createdAt']) &&
+                       isValidCampusAlert(incoming());
+
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(alertId) && existing().senderId == request.auth.uid;
+    }
+  }
+}

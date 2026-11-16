@@ -1,0 +1,6 @@
+{
+  "name": "MEC Connect",
+  "description": "Campus companion app for Model Engineering College Kochi featuring real-time student chat, campus events, department resources, and academic schedules with live notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

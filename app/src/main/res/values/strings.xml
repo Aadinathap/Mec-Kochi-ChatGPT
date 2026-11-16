@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MEC Connect</string>
+    <string name="college_full_name">Model Engineering College, Kochi</string>
+    <string name="college_location">Thrikkakara, Kochi • KTU</string>
+    <string name="sign_in_tagline">Your live MEC Kochi campus hub for peer chat, Excel &amp; club events, department notes, and KTU schedules.</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="nav_pulse">Pulse</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_events">Events</string>
+    <string name="nav_resources">Library</string>
+    <string name="nav_schedule">Schedule</string>
+    <string name="notification_channel_name">MEC Campus Alerts</string>
+    <string name="notification_channel_desc">Real-time academic, exam, placement, and campus announcement notifications for MEC Kochi students.</string>
+    <string name="notification_events_channel_name">MEC Event Updates</string>
+    <string name="notification_events_channel_desc">Real-time Excel MEC, hackathon, workshop, and club event push notifications.</string>
+    <string name="default_notification_channel_id" translatable="false">mec_campus_alerts</string>
+    <string name="creators_section_title">Creators</string>
+    <string name="creator_ceo_label">CEO: AADINATH AP</string>
+    <string name="creator_manager_label">MANAGER: ABIL SAJEE</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_account_details">Account Details</string>
+    <string name="profile_email_unavailable">No email linked</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="events_view_calendar">Calendar</string>
+    <string name="events_view_feed">All Feed</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_live_sync">Live Sync</string>
+    <string name="event_details_title">Event Details</string>
+    <string name="event_share">Share Event</string>
+    <string name="chat_camera_capture">Capture photo with camera</string>
+    <string name="chat_camera_permission_denied">Camera permission is required to capture and send photos.</string>
+    <string name="chat_uploading_photo">Uploading photo to campus chat…</string>
+    <string name="chat_photo_fallback_caption">Shared a campus photo</string>
+    <string name="resource_download_pdf">Download</string>
+    <string name="resource_downloading_pdf">Downloading…</string>
+    <string name="resource_open_pdf">Open PDF</string>
+    <string name="resource_download_again">Download again</string>
+    <string name="resource_no_pdf_url">Cannot download: this entry is a campus shelf reference without a web PDF link.</string>
+    <string name="resource_no_pdf_viewer">PDF saved to %1$s. No PDF viewer app found to open it.</string>
+    <string name="chat_receipt_sent">Sent</string>
+    <string name="chat_receipts_title">Message Read Receipts</string>
+    <string name="chat_receipts_close">Close</string>
+</resources>

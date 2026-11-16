@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path
+        name="chat_camera_photos"
+        path="chat_photos/" />
+    <files-path
+        name="downloaded_pdfs"
+        path="downloads/" />
+    <external-files-path
+        name="external_downloaded_pdfs"
+        path="Download/" />
+</paths>

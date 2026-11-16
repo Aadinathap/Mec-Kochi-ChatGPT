@@ -1,0 +1,229 @@
+{
+  "entities": {
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Private MEC Kochi student profile and notification preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID of the student." },
+        "displayName": { "type": "string", "description": "Student display name." },
+        "department": {
+          "type": "string",
+          "enum": ["CSE", "ECE", "EEE", "BME", "ME"],
+          "description": "MEC Kochi academic department."
+        },
+        "semester": {
+          "type": "string",
+          "enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"],
+          "description": "Current KTU semester."
+        },
+        "notificationsEnabled": { "type": "boolean", "description": "Whether real-time student notifications are enabled." },
+        "darkThemeEnabled": { "type": "boolean", "description": "Optional preferred dark theme override." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["userId", "displayName", "department", "semester", "notificationsEnabled", "createdAt", "updatedAt"]
+    },
+    "ScheduleSlot": {
+      "title": "ScheduleSlot",
+      "description": "Personal academic timetable slot, lab, exam, or assignment deadline.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "courseCode": { "type": "string", "description": "KTU course code e.g. CST301." },
+        "courseTitle": { "type": "string", "description": "Course or exam title." },
+        "facultyName": { "type": "string", "description": "Faculty name or exam cell note." },
+        "room": { "type": "string", "description": "MEC classroom, lab, or hall." },
+        "dayOfWeek": {
+          "type": "string",
+          "enum": ["MON", "TUE", "WED", "THU", "FRI", "EXAM"],
+          "description": "Weekday or exam schedule category."
+        },
+        "startTime": { "type": "string", "description": "Start time label e.g. 09:30 AM." },
+        "endTime": { "type": "string", "description": "End time label e.g. 10:25 AM." },
+        "slotType": {
+          "type": "string",
+          "enum": ["Lecture", "Lab", "Exam", "Assignment"],
+          "description": "Academic slot classification."
+        },
+        "reminderEnabled": { "type": "boolean", "description": "Whether local alert is active for this slot." },
+        "isCompleted": { "type": "boolean", "description": "Completion toggle for tasks or exams." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["userId", "courseCode", "courseTitle", "facultyName", "room", "dayOfWeek", "startTime", "endTime", "slotType", "reminderEnabled", "isCompleted", "createdAt", "updatedAt"]
+    },
+    "EventRsvp": {
+      "title": "EventRsvp",
+      "description": "Tracks a student's RSVP to a campus event.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Student Firebase Auth UID." },
+        "eventId": { "type": "string", "description": "Target campus event document ID." },
+        "eventTitle": { "type": "string", "description": "Event title snapshot." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["userId", "eventId", "eventTitle", "createdAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Real-time campus chat message in an MEC Kochi channel.",
+      "type": "object",
+      "properties": {
+        "campusId": { "type": "string", "enum": ["mec_kochi"], "description": "Campus scope identifier." },
+        "channelId": {
+          "type": "string",
+          "enum": ["general", "cse", "ece", "eee", "bme", "mech", "placement", "excel_fest"],
+          "description": "Chat room channel identifier."
+        },
+        "senderId": { "type": "string", "description": "Sender Firebase Auth UID." },
+        "senderName": { "type": "string", "description": "Sender display name." },
+        "senderDepartment": { "type": "string", "enum": ["CSE", "ECE", "EEE", "BME", "ME"] },
+        "senderSemester": { "type": "string", "enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"] },
+        "content": { "type": "string", "description": "Message body." },
+        "tag": { "type": "string", "enum": ["Discussion", "Doubt", "Announcement", "Note"] },
+        "imageUrl": { "type": "string", "format": "uri", "description": "Optional Firebase Storage download URL for camera photo attachment." },
+        "readReceipts": {
+          "type": "object",
+          "description": "Map of reader Firebase Auth UID to display name recording message read receipts."
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp (FieldValue.serverTimestamp())." }
+      },
+      "required": ["campusId", "channelId", "senderId", "senderName", "senderDepartment", "senderSemester", "content", "createdAt"]
+    },
+    "CampusEvent": {
+      "title": "CampusEvent",
+      "description": "MEC Kochi campus event, tech fest session, hackathon, or club meetup.",
+      "type": "object",
+      "properties": {
+        "campusId": { "type": "string", "enum": ["mec_kochi"] },
+        "title": { "type": "string" },
+        "organizer": { "type": "string" },
+        "category": { "type": "string", "enum": ["Tech Fest", "Workshop", "Hackathon", "Placement", "Cultural", "Club"] },
+        "venue": { "type": "string" },
+        "dateLabel": { "type": "string" },
+        "timeLabel": { "type": "string" },
+        "description": { "type": "string" },
+        "department": { "type": "string", "enum": ["ALL", "CSE", "ECE", "EEE", "BME", "ME"] },
+        "creatorId": { "type": "string" },
+        "rsvpCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["campusId", "title", "organizer", "category", "venue", "dateLabel", "timeLabel", "description", "department", "creatorId", "rsvpCount", "createdAt", "updatedAt"]
+    },
+    "DepartmentResource": {
+      "title": "DepartmentResource",
+      "description": "Department-wise KTU notes, lab manuals, PYQs, and syllabus resources.",
+      "type": "object",
+      "properties": {
+        "campusId": { "type": "string", "enum": ["mec_kochi"] },
+        "title": { "type": "string" },
+        "department": { "type": "string", "enum": ["ALL", "CSE", "ECE", "EEE", "BME", "ME"] },
+        "semester": { "type": "string", "enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"] },
+        "subjectCode": { "type": "string" },
+        "resourceType": { "type": "string", "enum": ["PDF", "Link", "Notes", "PYQ", "Lab Manual", "Syllabus", "Slides"] },
+        "description": { "type": "string" },
+        "linkOrReference": { "type": "string" },
+        "uploaderId": { "type": "string" },
+        "uploaderName": { "type": "string" },
+        "upvotes": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["campusId", "title", "department", "semester", "subjectCode", "resourceType", "description", "linkOrReference", "uploaderId", "uploaderName", "upvotes", "createdAt", "updatedAt"]
+    },
+    "CampusAlert": {
+      "title": "CampusAlert",
+      "description": "Real-time campus notification or academic announcement for MEC Kochi students.",
+      "type": "object",
+      "properties": {
+        "campusId": { "type": "string", "enum": ["mec_kochi"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "category": { "type": "string", "enum": ["Academic", "Exam", "Placement", "Event", "Urgent"] },
+        "department": { "type": "string", "enum": ["ALL", "CSE", "ECE", "EEE", "BME", "ME"] },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["campusId", "title", "message", "category", "department", "senderId", "senderName", "createdAt"]
+    },
+    "FcmDeviceToken": {
+      "title": "FcmDeviceToken",
+      "description": "Firebase Cloud Messaging device registration token and subscribed campus topics for push notifications.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "token": { "type": "string", "description": "FCM registration token." },
+        "department": {
+          "type": "string",
+          "enum": ["CSE", "ECE", "EEE", "BME", "ME"],
+          "description": "Subscribed MEC department."
+        },
+        "topics": { "type": "array", "description": "Active FCM topics subscribed by this device." },
+        "enabled": { "type": "boolean", "description": "Whether push notifications are enabled on this device." },
+        "platform": { "type": "string", "enum": ["android"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "token", "department", "topics", "enabled", "platform", "createdAt", "updatedAt"]
+    },
+    "ChatTypingStatus": {
+      "title": "ChatTypingStatus",
+      "description": "Ephemeral per-channel typing indicator for an authenticated student in mec_kochi.",
+      "type": "object",
+      "properties": {
+        "campusId": { "type": "string", "enum": ["mec_kochi"] },
+        "channelId": {
+          "type": "string",
+          "enum": ["general", "cse", "ece", "eee", "bme", "mech", "placement", "excel_fest"]
+        },
+        "userId": { "type": "string", "description": "Typing student Firebase Auth UID." },
+        "displayName": { "type": "string", "description": "Student display name." },
+        "department": { "type": "string", "enum": ["CSE", "ECE", "EEE", "BME", "ME"] },
+        "isTyping": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["campusId", "channelId", "userId", "displayName", "department", "isTyping", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/StudentProfile" },
+      "description": "Private student profile and preferences."
+    },
+    "/users/{userId}/academic_schedule/{slotId}": {
+      "schema": { "$ref": "#/entities/ScheduleSlot" },
+      "description": "Student's personal academic schedule, exams, and deadlines."
+    },
+    "/users/{userId}/event_rsvps/{eventId}": {
+      "schema": { "$ref": "#/entities/EventRsvp" },
+      "description": "Student's personal RSVP records for campus events."
+    },
+    "/users/{userId}/fcm_tokens/{tokenId}": {
+      "schema": { "$ref": "#/entities/FcmDeviceToken" },
+      "description": "Student's FCM push notification registration tokens and subscribed topics."
+    },
+    "/chat_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Real-time campus channel messages scoped to mec_kochi."
+    },
+    "/chat_typing/{typingId}": {
+      "schema": { "$ref": "#/entities/ChatTypingStatus" },
+      "description": "Real-time per-channel typing indicator states scoped to mec_kochi."
+    },
+    "/campus_events/{eventId}": {
+      "schema": { "$ref": "#/entities/CampusEvent" },
+      "description": "Campus events and club sessions at MEC Kochi."
+    },
+    "/department_resources/{resourceId}": {
+      "schema": { "$ref": "#/entities/DepartmentResource" },
+      "description": "Department study materials, lab manuals, and KTU resources."
+    },
+    "/campus_alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/CampusAlert" },
+      "description": "Real-time student announcements and academic notifications."
+    }
+  }
+}
