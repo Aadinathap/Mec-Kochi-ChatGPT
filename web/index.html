@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a2d">
+  <meta name="description" content="MEC Connect — a campus companion for Model Engineering College, Kochi.">
+  <title>MEC Connect — Campus companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#home" aria-label="MEC Connect home"><span class="brand-mark">M</span><span><b>MEC</b><small>CONNECT</small></span></a>
+      <div class="campus-label">YOUR CAMPUS</div>
+      <div class="campus-name"><span class="campus-dot"></span> Model Engineering College</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-view="home"><span>⌂</span> Overview</button>
+        <button class="nav-link" data-view="chat"><span>◌</span> Campus chat <i id="chat-count" class="nav-count"></i></button>
+        <button class="nav-link" data-view="events"><span>▦</span> Events</button>
+        <button class="nav-link" data-view="resources"><span>▤</span> Study resources</button>
+        <button class="nav-link" data-view="schedule"><span>◷</span> My schedule</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="profile-mini"><div class="avatar" id="mini-avatar">M</div><div class="profile-mini-copy"><b id="mini-name">MEC Student</b><span id="mini-meta">Set up your profile</span></div><button class="icon-button" data-view="profile" title="Profile settings">⚙</button></div>
+        <button id="theme-toggle" class="theme-button"><span>◐</span> Toggle appearance</button>
+        <div class="local-note"><span class="status-dot"></span> Saved on this device</div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar"><button class="mobile-menu" id="mobile-menu" aria-label="Open menu">☰</button><div class="breadcrumb">MEC Connect <span>/</span> <b id="page-title">Overview</b></div><div class="topbar-right"><span class="today-label" id="today-label"></span><button class="avatar top-avatar" data-view="profile" id="top-avatar" title="Your profile">M</button></div></header>
+      <div class="content" id="content"></div>
+      <footer class="site-footer">MEC Connect <span>·</span> A campus companion concept for MEC Kochi <span>·</span> Your data stays in this browser</footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="modal" class="modal"><div class="modal-card"><button class="modal-close" id="modal-close" aria-label="Close">×</button><div id="modal-content"></div></div></dialog>
+  <script src="app.js" defer></script>
+</body>
+</html>
